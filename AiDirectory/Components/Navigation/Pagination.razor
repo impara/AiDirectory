@@ -1,0 +1,31 @@
+﻿@code {
+    @* Parameters *@
+
+    @* Callback for the "Next" button click event *@
+    [Parameter] public EventCallback OnNextPage { get; set; }
+
+    @* Callback for the "Previous" button click event *@
+    [Parameter] public EventCallback OnPreviousPage { get; set; }
+
+    @* Current page number for pagination *@
+    [Parameter] public int CurrentPage { get; set; }
+
+    @* Indicates if the current page is the first page *@
+    [Parameter] public bool IsFirstPage { get; set; }
+
+    @* Indicates if the current page is the last page *@
+    [Parameter] public bool IsLastPage { get; set; }
+}
+
+@* Pagination Controls *@
+<div class="pagination-controls">
+    @* "Previous" button. It's disabled on the first page. *@
+    <button @onclick="OnPreviousPage" disabled="@IsFirstPage">Previous</button>
+
+    @* Display the current page number *@
+    <span>Page @CurrentPage</span>
+
+    @* "Next" button. It's disabled on the last page. *@
+    <button @onclick="OnNextPage" disabled="@IsLastPage">Next</button>
+</div>
+<br />

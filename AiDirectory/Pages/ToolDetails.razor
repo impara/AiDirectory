@@ -1,0 +1,51 @@
+﻿@using AiDirectory.Data
+@inject ILogger<Index> Logger
+
+@* Check if a tool is selected to display its details in a modal *@
+@if (SelectedTool != null)
+{
+    @* Modal background. Clicking outside the modal content will close the modal. *@
+    <div class="modal-background" @onclick="CloseModal">
+
+        @* Modal content. Click events are stopped from propagating to the background to prevent accidental closing. *@
+        <div class="modal-content" @onclick:stopPropagation>
+
+            @* Display the name of the selected tool *@
+            <h3>@SelectedTool.Name</h3>
+
+            @* Display the description of the selected tool *@
+            <p>@SelectedTool.Description</p>
+
+            @* Display the pricing model of the selected tool *@
+            <p><i class="fas fa-tags"></i> <strong>Pricing Model:</strong> @SelectedTool.PricingModel</p>
+
+            @* Display the category of the selected tool *@
+            <p><i class="fas fa-folder-open"></i> <strong>Category:</strong> @SelectedTool.AdditionalInfo</p>
+
+            @* Link to visit the tool's website *@
+            <a href="@SelectedTool.FinalUrl" target="_blank">Visit Website</a><br />
+
+            @* Button to close the modal *@
+            <button @onclick="CloseModal">Close</button>
+        </div>
+    </div>
+}
+
+@code {
+    @* Parameters *@
+
+    @* Selected tool's data for displaying in the modal *@
+    [Parameter] public ApiData SelectedTool { get; set; }
+
+    @* Callback to close the modal *@
+    [Parameter] public EventCallback CloseModal { get; set; }
+
+    @* Event Handlers *@
+
+    @* Handle the event when a tool is clicked. Currently, it logs a message for debugging purposes. *@
+    private void OpenToolDetails(MouseEventArgs e)
+    {
+        // For now, just log a message to see if the method is triggered
+        Logger.LogInformation("Tool clicked");
+    }
+}

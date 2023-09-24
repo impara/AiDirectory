@@ -1,0 +1,99 @@
+﻿@inject HttpClient Http
+
+@code {
+    @* Parameters *@
+
+    @* Pricing model parameter *@
+    [Parameter] public string PricingModel { get; set; }
+
+    @* Additional information parameter *@
+    [Parameter] public string AdditionalInfo { get; set; }
+
+    @* Callback when the pricing model changes *@
+    [Parameter] public EventCallback<string> PricingModelChanged { get; set; }
+
+    @* Callback when the additional information changes *@
+    [Parameter] public EventCallback<string> AdditionalInfoChanged { get; set; }
+
+    @* Limit parameter for pagination *@
+    [Parameter] public int Limit { get; set; }
+
+    @* Callback when the limit changes *@
+    [Parameter] public EventCallback<int> LimitChanged { get; set; }
+
+    @* Event Handlers *@
+
+    @* Handle changes in the limit selection *@
+    private void OnLimitChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int newLimit))
+        {
+            Limit = newLimit;
+            LimitChanged.InvokeAsync(Limit);
+        }
+        // else: handle the error or ignore
+    }
+
+    @* Handle changes in the pricing model dropdown *@
+    private void OnPricingModelChanged(ChangeEventArgs e)
+    {
+        PricingModel = e.Value.ToString();
+        PricingModelChanged.InvokeAsync(PricingModel);
+    }
+
+    @* Handle changes in the additional information dropdown *@
+    private void OnAdditionalInfoChanged(ChangeEventArgs e)
+    {
+        AdditionalInfo = e.Value.ToString();
+        AdditionalInfoChanged.InvokeAsync(AdditionalInfo);
+    }
+
+    @* Helper Methods *@
+
+    @* Check if the current limit matches the given value *@
+    private bool IsLimit(int value) => Limit == value;
+
+    @* Reset the dropdown selections to default values *@
+    public void ResetDropdowns()
+    {
+        PricingModel = "";
+        AdditionalInfo = "";
+    }
+
+    private List<string> AdditionalInfoOptions { get; set; } = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AdditionalInfoOptions = await Http.GetFromJsonAsync<List<string>>("https://ai.amertech.online/additional_info");
+    }
+}
+
+@* Pricing Model Dropdown *@
+<select value="@PricingModel" @onchange="OnPricingModelChanged">
+    <option value="">Select a pricing model</option>
+    <option value="Freemium">Freemium</option>
+    <option value="Paid">Paid</option>
+    <option value="Free">Free</option>
+</select>
+
+@* Additional Information Dropdown *@
+<select value="@AdditionalInfo" @onchange="OnAdditionalInfoChanged">
+    <option value="">Select a category</option>
+    @foreach (var info in AdditionalInfoOptions)
+    {
+        <option value="@info">@info</option>
+    }
+</select>
+
+@* Limit Selection Radio Buttons *@
+<div class="limit-selection">
+    <label>
+        <input type="radio" value="10" checked="@IsLimit(10)" @onchange="OnLimitChanged" /> 10 items
+    </label>
+    <label>
+        <input type="radio" value="25" checked="@IsLimit(25)" @onchange="OnLimitChanged" /> 25 items
+    </label>
+    <label>
+        <input type="radio" value="50" checked="@IsLimit(50)" @onchange="OnLimitChanged" /> 50 items
+    </label>
+</div>

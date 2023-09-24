@@ -1,0 +1,35 @@
+﻿@* UI Elements *@
+@* Search input field *@
+<input type="text" value="@SearchTerm" @oninput="HandleInputChange" placeholder="Search for tools..." />
+
+@* Reset Filters button *@
+<button @onclick="HandleResetFilters">Reset Filters</button>
+
+@code {
+    @* Parameters *@
+    @* Search term parameter *@
+    [Parameter] public string SearchTerm { get; set; }
+
+    @* Callback when the search term changes *@
+    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+
+    @* Callback when filters are reset *@
+    [Parameter] public EventCallback OnResetFilters { get; set; }
+
+    @* Event Handlers *@
+
+    @* Handle changes in the search input field *@
+    private async Task HandleInputChange(ChangeEventArgs e)
+    {
+        SearchTerm = e.Value.ToString();
+        await SearchTermChanged.InvokeAsync(SearchTerm);
+    }
+
+    @* Handle the reset filters button click *@
+    private async Task HandleResetFilters()
+    {
+        SearchTerm = "";  // Clear the search term
+        await OnResetFilters.InvokeAsync();  // Invoke the reset callback
+        StateHasChanged();  // Force a UI update
+    }
+}

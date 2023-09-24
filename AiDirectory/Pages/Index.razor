@@ -1,0 +1,165 @@
+﻿@page "/"
+@using AiDirectory.Data
+@using AiDirectory.Components.Filters
+@using AiDirectory.Components.Navigation
+@using AiDirectory.Components.Search
+@inject IToolService ToolService
+@inject HttpClient Http
+@inject ILogger<Index> Logger
+
+@* Title of the Page *@
+<h3>AI Tools Directory</h3>
+
+@* Tool Details Modal Component *@
+<ToolDetails SelectedTool="selectedTool" CloseModal="CloseToolDetails" />
+
+@* Display loader if data is not yet fetched, otherwise display the tools and filters *@
+@if (apiData == null)
+{
+    <div class="loader"></div>
+}
+else
+{
+    @* Search Bar Component *@
+    <SearchBar SearchTerm="@apiParameters.SearchTerm" SearchTermChanged="HandleSearchTermChanged" OnResetFilters="ResetFilters" />
+
+    @* Filters Component *@
+    <Filters @ref="filtersComponent" PricingModelChanged="HandlePricingModelChanged"
+             AdditionalInfoChanged="HandleAdditionalInfoChanged"
+             Limit="apiParameters.Limit"
+             LimitChanged="HandleLimitChanged" />
+
+    @* Display each tool in the list *@
+    @foreach (var tool in apiData)
+    {
+        <div class="tool-item" @onclick="@(() => OpenToolDetails(tool))">
+            <p><strong>@tool.Name</strong></p>
+            <p>Pricing Model: @tool.PricingModel</p>
+            <p>Category: @tool.AdditionalInfo <i class="@GetIconForCategory(tool.AdditionalInfo)"></i></p>
+        </div>
+    }
+
+    @* Pagination Component *@
+    <Pagination CurrentPage="CurrentPage" IsFirstPage="IsFirstPage" IsLastPage="IsLastPage" OnPreviousPage="PreviousPage" OnNextPage="NextPage" />
+}
+
+@code {
+    @* Properties *@
+    private AiDirectory.Data.ApiData[] apiData; // Holds the list of AI tools
+    private ApiParameters apiParameters = new ApiParameters { Limit = 10 }; // API parameters for filtering and pagination
+    private ApiData selectedTool; // Holds the currently selected tool for details view
+    private int CurrentPage { get; set; } = 1; // Current page for pagination
+    private Filters filtersComponent; // Reference to the Filters component
+
+    @* Check if it's the first or last page for pagination *@
+    private bool IsFirstPage => CurrentPage == 1;
+    private bool IsLastPage => apiData.Length < apiParameters.Limit;
+
+    @* Lifecycle Method: Fetch tools when the component is initialized *@
+    protected override async Task OnInitializedAsync() => await FetchTools();
+
+    private async Task FetchTools()
+    {
+        try
+        {
+            apiData = await ToolService.GetTools(apiParameters);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Error fetching tools: {Error}", ex.Message);
+            // Handle error appropriately, maybe show a user-friendly error message.
+        }
+        StateHasChanged();
+    }
+
+    @* Search for tools based on the current filters and reset the pagination *@
+    private async Task SearchTools()
+    {
+        CurrentPage = 1;
+        apiParameters.Skip = 0;
+        await FetchTools();
+    }
+
+    @* Event Handlers for Search and Filters *@
+    private async Task HandleSearchTermChanged(string newSearchTerm)
+    {
+        apiParameters.SearchTerm = newSearchTerm;
+        await SearchTools();
+    }
+
+    private async Task ResetFilters()
+    {
+        apiParameters = new ApiParameters();
+        filtersComponent?.ResetDropdowns();
+        await SearchTools();
+    }
+
+    private async void HandlePricingModelChanged(string newPricingModel)
+    {
+        apiParameters.PricingModel = newPricingModel;
+        await FetchTools();
+    }
+
+    private async void HandleAdditionalInfoChanged(string newAdditionalInfo)
+    {
+        apiParameters.AdditionalInfo = newAdditionalInfo;
+        await FetchTools();
+    }
+
+    private async void HandleLimitChanged(int newLimit)
+    {
+        apiParameters.Limit = newLimit;
+        await SearchTools();
+    }
+
+    @* Pagination Methods *@
+    private async void NextPage()
+    {
+        CurrentPage++;
+        apiParameters.Skip = (CurrentPage - 1) * apiParameters.Limit;
+        await FetchTools();
+    }
+
+    private async void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            apiParameters.Skip = (CurrentPage - 1) * apiParameters.Limit;
+            await FetchTools();
+        }
+    }
+
+    @* Methods related to displaying tool details *@
+    private void OpenToolDetails(ApiData tool)
+    {
+        selectedTool = tool;
+        StateHasChanged();
+    }
+
+    private void CloseToolDetails()
+    {
+        selectedTool = null;
+        StateHasChanged();
+    }
+
+    @* Helper Methods *@
+    private string GetIconForCategory(string category) => category switch
+    {
+        "Finance" => "fas fa-dollar-sign",
+        "Productivity" => "fas fa-lightbulb",
+        "Image Improvement" => "fas fa-photo-film",
+        "Generative Art" => "fas fa-paintbrush",
+        "Social Media" => "fas fa-square-share-nodes",
+        "Research" => "fas fa-book-bookmark",
+        "Marketing" => "fas fa-rectangle-ad",
+        "Translation" => "fas fa-globe",
+        "Chat" => "fas fa-comments",
+        "Copywriting" => "fas fa-copyright",
+        "Podcasting" => "fas fa-microphone",
+        "Prompt Guides" => "fas fa-terminal",
+        "Gaming" => "fas fa-gamepad",
+        "Text-To-Video" => "fas fa-file-video",
+        _ => "fas fa-question",
+    };
+}
