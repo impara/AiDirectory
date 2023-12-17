@@ -147,13 +147,22 @@ button {
     align-items: center;
     z-index: 1000; /* Ensure the modal appears above other content */
 }
+
 .modal-content {
     background-color: white;
     padding: 20px;
     border-radius: 5px;
-    width: 80%; /* Adjust this to your preference */
+    width: 90%; /* Use a percentage width for better responsiveness */
     max-width: 500px; /* This will ensure the modal doesn't get too wide on larger screens */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow-y: auto; /* Allow scrolling within the modal if the content is too long */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 767px) {
+    .modal-content {
+        width: 95%; /* Allow more width on small screens */
+    }
 }
     .modal-content h3 {
         font-size: 24px;
